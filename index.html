@@ -1,0 +1,500 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<script type="text/javascript">
+var timer;
+var field = [];
+var new_figure_field = [];
+
+var size_x = 15;
+var size_y = 30;
+
+var lock = 0;
+var current_figure = 0;
+var pressed_key = 0;
+var speed_interval = 750;
+var score = 0;
+var figure_type = Math.random();
+var snake = [];
+var snake_direction = [-1, 0];
+var max_score = 0;
+var destroyed_lines = 0;
+var stop = 0;
+
+function endgame() {
+	alert('Game over, score: ' + score);
+	clearInterval(timer);
+	stop = 1;
+	};
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) != -1) return c.substring(name.length,c.length);
+    }
+    return "";
+};
+
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+d.toGMTString();
+    document.cookie = cname + "=" + cvalue + "; " + expires;
+};
+
+function initial()
+	{
+	var count_x;
+	var count_y;
+	for (count_y = 0; count_y < size_y; count_y++) 
+		{
+		field[count_y] = [];
+		for (count_x = 0; count_x < size_x; count_x++)
+			{
+			field[count_y][count_x] = 0;
+			};
+		};
+	create_new_figure();
+	snake = [[Math.floor(field[0].length/2) - 1, 7], [Math.floor(field[0].length/2), 7], [Math.floor(field[0].length/2) + 1, 7]];
+	timer = setInterval(timer_event, speed_interval);
+	max_score = getCookie('max_score');
+	if (!max_score) {
+		max_score = 0;
+		setCookie('max_score', 0, 3650);
+		}
+	};
+
+function timer_event()
+	{
+	var conclusion = 0;
+	var changed = 0;
+	
+	var right_border = 0;
+	var left_border = 0;
+
+	if (pressed_key == 0) {
+		for (var count_chain = snake.length - 1; count_chain >=0; count_chain--) {
+			field[snake[count_chain][1]][snake[count_chain][0]] = 0;
+			};
+	
+		for (var count_chain = snake.length - 1; count_chain >=0; count_chain--) {
+		
+			if (count_chain > 0) {
+				snake[count_chain] = snake[count_chain - 1]
+				}
+			else {
+				snake[count_chain] = [snake[count_chain][0] + snake_direction[0], snake[count_chain][1] + snake_direction[1]]
+				};
+
+			if (snake[0][0] < 0 || snake[0][0] > size_x - 1) {
+				endgame();
+				return 0;
+				};
+
+			if (snake[0][1] < 0 || snake[0][1] > size_y - 1) {
+				endgame();
+				return 0;
+				};
+			
+			if (field[snake[count_chain][1]][snake[count_chain][0]] == 1) {
+				endgame();
+				return 0;
+				};
+			if (count_chain == 0 && field[snake[count_chain][1]][snake[count_chain][0]] == 2) {
+				score++;
+				}
+			field[snake[count_chain][1]][snake[count_chain][0]] = 3;
+			};
+		};	
+	
+	for (var count_y = field.length - 1; count_y > 0; count_y--) {
+		if (field[count_y][0] == 2) {
+			left_border = 1;
+			};
+		if (field[count_y][field[count_y].length-1] == 2) {
+			right_border = 1;
+			};
+		}
+
+	for (var count_y = field.length - 1; count_y > 0; count_y--) {
+		for (var count_x = 0; count_x < field[count_y].length; count_x++) {
+			if (field[count_y][count_x] == 1 && field[count_y][count_x+1] == 2) {
+				left_border = 1;
+				};
+			};
+		};
+
+	for (var count_y = field.length - 1; count_y > 0; count_y--) {
+		for (var count_x = field[count_y].length - 1; count_x > 0 ; count_x--) {
+			if (field[count_y][count_x] == 1 && field[count_y][count_x-1] == 2) {
+				right_border = 1;
+				};
+			};
+		};
+		
+	var x_modifier = 0;
+	var y_modifier = 0;
+	if (pressed_key == 37 && !left_border){
+		for (var count_y = field.length - 1; count_y > 0; count_y--) {
+			for (var count_x = 0; count_x < field[count_y].length; count_x++) {
+				if (field[count_y][count_x] == 0 && field[count_y][count_x+1] == 2) {
+					field[count_y][count_x] = 2;
+					field[count_y][count_x+1] = 0;
+					};
+				};
+			};
+		};
+	if (pressed_key == 39 && !right_border) {
+		for (var count_y = field.length - 1; count_y > 0; count_y--) {
+			for (var count_x = field[count_y].length - 1; count_x > 0 ; count_x--) {
+				if (field[count_y][count_x] == 0 && field[count_y][count_x-1] == 2) {
+					field[count_y][count_x] = 2;
+					field[count_y][count_x-1] = 0;
+					};
+				};
+			};
+		};
+	if (pressed_key == 38) {
+		var axis = [0, 0];
+		var figure = []
+		var new_figure = []
+		for (var count_y = field.length - 1; count_y > 0; count_y--) {
+			for (var count_x = field[count_y].length - 1; count_x >= 0 ; count_x--) {
+				if (field[count_y][count_x] == 2) {		
+					figure.push([count_x, count_y]);
+					new_figure.push([count_x, count_y]);
+					};
+				};
+			};
+
+		for (var point = 0; point < figure.length; point++) {
+			if (axis[1] < figure[point][0]) {
+				axis[1] = figure[point][0];
+				}
+			if (axis[0] < figure[point][1]) {
+				axis[0] = figure[point][1];
+				}
+			};
+		
+		var start_point_x = axis[1]
+		var start_point_y = axis[0]
+		var max_limit = 1;
+		
+		for (var point = 0; point < figure.length; point++) {
+			figure[point][0] = figure[point][0] - start_point_x;
+			figure[point][1] = figure[point][1] - start_point_y;
+
+			new_figure[point][0] = figure[point][0] + Math.abs(figure[point][0] + figure[point][1]) + start_point_x;
+			new_figure[point][1] = figure[point][0] + start_point_y;
+			
+			figure[point][0] = figure[point][0] + start_point_x;
+			figure[point][1] = figure[point][1] + start_point_y;
+
+			field[figure[point][1]][figure[point][0]] = 0;
+		
+			if (new_figure[point][0] >= size_x && new_figure[point][0] - (size_x - 1) > max_limit) {
+				max_limit = new_figure[point][0] - (size_x - 1);
+				}
+
+			if (new_figure[point][0] - max_limit < 0) {
+				max_limit = 0;
+				}
+			}
+
+		var do_not_change = 0;
+
+		for (var point = 0; point < new_figure.length; point++) {	
+			if (field[new_figure[point][1]][new_figure[point][0] - max_limit] == 1) {
+				do_not_change = 1;
+				};
+			};		
+			
+		if (!do_not_change) {
+			for (var point = 0; point < new_figure.length; point++) {	
+				field[new_figure[point][1]][new_figure[point][0] - max_limit] = 2;
+				};
+			}
+		else {
+			for (var point = 0; point < figure.length; point++) {	
+				field[figure[point][1]][figure[point][0]] = 2;
+				};
+			};
+		};
+	
+
+	if (pressed_key == 40 || pressed_key == 0) {
+		for (var count_y = field.length - 1; count_y > 0; count_y--) {
+			for (var count_x = 0; count_x < field[count_y].length; count_x++) {
+				if (field[count_y][count_x] == 1 && field[count_y-1][count_x] == 2) {
+					conclusion = 1;
+					};
+				if (count_y + 1 == size_y && field[count_y][count_x] == 2) {
+					conclusion = 1;
+					};
+				};
+			};
+
+		if (conclusion) {
+			for (var count_y = field.length - 1; count_y > 0; count_y--) {
+				for (var count_x = 0; count_x < field[count_y].length; count_x++) {
+					if (field[count_y][count_x] == 2) {
+						field[count_y][count_x] = 1;
+						};
+					};
+				};	
+			};
+		
+		for (var count_y = field.length - 1; count_y > 0; count_y--) {
+			var full_line = 0;
+			for (var count_x = 0; count_x < field[count_y].length; count_x++) {
+				if (field[count_y][count_x] == 0 && field[count_y-1][count_x] == 2) {
+					field[count_y][count_x] = 2;
+					field[count_y-1][count_x] = 0;
+					changed = 1;
+					};
+				if (field[count_y][count_x] == 1) {
+					full_line  += 1;
+					};
+				};
+				
+			if (full_line == size_x) {
+				for (move_count_y = count_y; move_count_y > 0; move_count_y--) {
+					for (var move_count_x = 0; move_count_x < field[move_count_y].length; move_count_x++) {
+						field[move_count_y][move_count_x] = field[move_count_y-1][move_count_x];
+						if (field[move_count_y][move_count_x] == 3) {
+							field[move_count_y][move_count_x] = 0;
+							};
+
+						};
+					};
+				for (var count_chain = snake.length - 1; count_chain >=0; count_chain--) {
+					field[snake[count_chain][1]][snake[count_chain][0]] = 3;
+					};
+				score++;
+				destroyed_lines++;
+				if (score > max_score) {
+					max_score = score;
+					setCookie('max_score', max_score, 3650);
+					}
+				if (destroyed_lines % 10 == 0) {
+					clearInterval(timer);
+					speed_interval -= 50;
+					timer = setInterval(timer_event, speed_interval);
+					snake.push(snake[snake.length-1]);
+					}
+				};
+			};
+
+	if (changed == 0) {
+		create_new_figure();
+		};
+	};
+
+	pressed_key = 0;	
+	draw();
+	};
+	
+function create_new_figure()
+	{
+	for (count_y = 0; count_y < 6; count_y++) 
+		{
+		new_figure_field[count_y] = [];
+		for (count_x = 0; count_x < 6; count_x++)
+			{
+			new_figure_field[count_y][count_x] = 0;
+			};
+		};	
+
+
+	if (field[1][Math.floor(field[0].length/2)] == 1 ||
+		field[2][Math.floor(field[0].length/2)] == 1 ||
+		field[3][Math.floor(field[0].length/2)] == 1 ||
+		field[4][Math.floor(field[0].length/2)] == 1 ||
+		field[1][Math.floor(field[0].length/2) - 1] == 1 ||
+		field[2][Math.floor(field[0].length/2) - 1] == 1 ||
+		field[3][Math.floor(field[0].length/2) - 1] == 1 ||
+		field[4][Math.floor(field[0].length/2) - 1] == 1 ||
+		field[1][Math.floor(field[0].length/2) + 1] == 1 ||
+		field[2][Math.floor(field[0].length/2) + 1] == 1 ||
+		field[3][Math.floor(field[0].length/2) + 1] == 1 ||
+		field[4][Math.floor(field[0].length/2) + 1] == 1) {
+		endgame();
+		return 0;
+		};
+
+    if (figure_type < 0.10) {
+		current_figure = 1;	
+		field[1][Math.floor(field[0].length/2)] = 2;
+		field[2][Math.floor(field[0].length/2)] = 2;
+		field[3][Math.floor(field[0].length/2)] = 2;
+		field[3][Math.floor(field[0].length/2) + 1] = 2;	
+		}
+	else if (figure_type < 0.20) {
+		current_figure = 2;
+		field[1][Math.floor(field[0].length/2)] = 2;
+		field[2][Math.floor(field[0].length/2)] = 2;
+		field[3][Math.floor(field[0].length/2)] = 2;
+		field[3][Math.floor(field[0].length/2) - 1] = 2;	
+		}
+	else if (figure_type < 0.35) {
+		current_figure = 3;
+		field[1][Math.floor(field[0].length/2)] = 2;
+		field[2][Math.floor(field[0].length/2)] = 2;
+		field[3][Math.floor(field[0].length/2)] = 2;
+		field[4][Math.floor(field[0].length/2)] = 2;	
+		}
+	else if (figure_type < 0.50) {
+		current_figure = 4;
+		field[1][Math.floor(field[0].length/2)] = 2;
+		field[2][Math.floor(field[0].length/2)] = 2;
+		field[1][Math.floor(field[0].length/2) + 1] = 2;
+		field[2][Math.floor(field[0].length/2) + 1] = 2;	
+		}
+	else if (figure_type < 0.65) {
+		current_figure = 5;
+		field[1][Math.floor(field[0].length/2)] = 2;
+		field[2][Math.floor(field[0].length/2)] = 2;
+		field[1][Math.floor(field[0].length/2) + 1] = 2;
+		field[2][Math.floor(field[0].length/2) - 1] = 2;	
+		}
+	else if (figure_type < 0.80) {
+		current_figure = 5;
+		field[1][Math.floor(field[0].length/2)] = 2;
+		field[2][Math.floor(field[0].length/2)] = 2;
+		field[1][Math.floor(field[0].length/2) - 1] = 2;
+		field[2][Math.floor(field[0].length/2) + 1] = 2;	
+		}
+	else {
+		current_figure = 6;
+		field[1][Math.floor(field[0].length/2)] = 2;
+		field[2][Math.floor(field[0].length/2) + 1] = 2;
+		field[2][Math.floor(field[0].length/2)] = 2;
+		field[3][Math.floor(field[0].length/2)] = 2;	
+		};
+		
+	figure_type = Math.random()
+
+    if (figure_type < 0.10) {
+		new_figure_field[1][2] = 2;
+		new_figure_field[2][2] = 2;
+		new_figure_field[3][2] = 2;
+		new_figure_field[3][3] = 2;			
+		}
+	else if (figure_type < 0.20) {
+		new_figure_field[1][3] = 2;
+		new_figure_field[2][3] = 2;
+		new_figure_field[3][3] = 2;
+		new_figure_field[3][2] = 2;			
+		}
+	else if (figure_type < 0.35) {
+		new_figure_field[1][2] = 2;
+		new_figure_field[2][2] = 2;
+		new_figure_field[3][2] = 2;
+		new_figure_field[4][2] = 2;			
+		}
+	else if (figure_type < 0.50) {
+		new_figure_field[2][2] = 2;
+		new_figure_field[3][2] = 2;
+		new_figure_field[2][3] = 2;
+		new_figure_field[3][3] = 2;			
+		}
+	else if (figure_type < 0.65) {
+		new_figure_field[2][2] = 2;
+		new_figure_field[3][2] = 2;
+		new_figure_field[2][3] = 2;
+		new_figure_field[3][1] = 2;			
+		}
+	else if (figure_type < 0.80) {
+		new_figure_field[2][2] = 2;
+		new_figure_field[3][2] = 2;
+		new_figure_field[2][1] = 2;
+		new_figure_field[3][3] = 2;			
+		}
+	else {
+		new_figure_field[1][2] = 2;
+		new_figure_field[2][3] = 2;
+		new_figure_field[2][2] = 2;
+		new_figure_field[3][2] = 2;			
+		};
+	
+	};
+	
+function draw()
+	{
+	var output = "";
+	var count_x;
+	var count_y;
+
+	var state = ['empty.png', 'inactive.png', 'active.png', 'snake.png'];
+	
+	for (count_x = 0; count_x < field.length; count_x++) {
+		for (count_y = 0; count_y < field[count_x].length; count_y++) {
+			output += "<img src='" + state[field[count_x][count_y]] + "'>";
+			};
+		output += '<br>';
+		};
+	document.getElementById("main-scene").innerHTML=output;
+	
+	var output_service = "";
+	
+	for (count_x = 0; count_x < new_figure_field.length; count_x++) {
+		for (count_y = 0; count_y < new_figure_field[count_x].length; count_y++) {
+			output_service += "<img src='" + state[new_figure_field[count_x][count_y]] + "'>";
+			};
+		output_service += '<br>';
+		};
+
+	output_service += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Score: " + score + "</b><br><b>Max score: " + max_score + "</b><br>";
+	
+	document.getElementById("service-zone").innerHTML=output_service;
+	};
+
+window.onkeydown = key_press;	
+	
+function key_press(event)
+	{
+	if (!stop) {
+		pressed_key = event.keyCode;
+		if (pressed_key > 36 && pressed_key < 41) {
+			timer_event();
+			};
+		if (pressed_key == 65) {
+			if (snake_direction[0] != 1) {
+				snake_direction = [-1,0];
+				}
+			timer_event();
+			};
+		if (pressed_key == 68) {
+			if (snake_direction[0] != -1) {
+				snake_direction = [1,0];
+				}
+			timer_event();
+			};
+		if (pressed_key == 83) {
+			if (snake_direction[1] != -1) {
+				snake_direction = [0,1];
+				}
+			timer_event();
+			};
+		if (pressed_key == 87) {
+			if (snake_direction[1] != 1) {
+				snake_direction = [0,-1];
+				}
+			timer_event();
+			};
+		};
+	};
+</script>
+
+<body onload="initial();">
+	<p align="justify">Движение фигур курсорными клавишами. Движение змейки - AWSD. Конец игры - удар змейки о стенку или о закрепленную фигуру, либо заполнение стакана до места появления фигур.</p>
+	<div id="main-scene" style="float:left; margin: 0px 10px 10px 10px;">
+	</div>
+	<div id="service-zone">
+	</div>
+</body>
+</html>
